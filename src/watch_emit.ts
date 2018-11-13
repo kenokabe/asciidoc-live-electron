@@ -62,7 +62,11 @@ const watch_emit = (socket: Socket) => {
         line: (infoTL[now] as vscode.TextEditorSelectionChangeEvent)
           .selections[0]
           .active
-          .line
+          .line,
+        lines: (infoTL[now] as vscode.TextEditorSelectionChangeEvent)
+          .textEditor
+          .document
+          .lineCount
       })
     );
 
