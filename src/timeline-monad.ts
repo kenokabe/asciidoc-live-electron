@@ -2,7 +2,6 @@ interface timeline {
   type: string,
   [now: string]: unknown,
   sync: Function
-
 }
 
 const now: string = "now";//time-index of the current time

@@ -57,7 +57,13 @@ const watch_emit = (socket: Socket) => {
 
   const nonTL = selectTL
     .sync(
-      () => (socketTL[now] = { 1: selectTL[now], 2: infoTL[now] })
+      () => (socketTL[now] = {
+        text: selectTL[now],
+        line: (infoTL[now] as vscode.TextEditorSelectionChangeEvent)
+          .selections[0]
+          .active
+          .line
+      })
     );
 
   return true;
