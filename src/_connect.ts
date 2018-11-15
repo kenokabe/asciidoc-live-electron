@@ -4,11 +4,11 @@ import * as vscode from 'vscode';
 import { T, now } from "./timeline-monad";
 interface timeline {
   type: string;
-  [now: string]: unknown;
+  [now: string]: any;
   sync: Function;
 }
 
-import { watch_emit } from "./_watch_emit"
+import { connect_observer } from "./_connect-observer"
 
 const io = require("socket.io-client");
 
@@ -19,34 +19,34 @@ const connect = (connectionTL: timeline) => () => {
   vscode.window
     .showInformationMessage('AsciiDoc Live Electron: Connecting to Viewer...');
 
-  const socket =
+  connectionTL[now] =
     (connectionTL[now] !== undefined)
       ? (() => {
         vscode.window
           .showInformationMessage('AsciiDoc Live Electron: Viewer is already Connected.');
-
+        return undefined;
       })()
       : io('http://localhost:3999', {
         reconnection: false
-      })
-        .on('connect', () => {
+      });
 
-          connectionTL[now] = socket;
+  connectionTL[now]
+    .on('connect', () => {
 
-          vscode.window
-            .showInformationMessage('AsciiDoc Live Electron: Viewer Connected!');
+      vscode.window
+        .showInformationMessage('AsciiDoc Live Electron: Viewer Connected!');
 
-          watch_emit(connectionTL);
-        })
-        .on('event', (data: object) => {
+      connect_observer(connectionTL);
+    })
+    .on('event', (data: object) => {
 
-        })
-        .on('disconnect', () => {
-          connectionTL[now] = undefined;
+    })
+    .on('disconnect', () => {
+      connectionTL[now] = undefined;
 
-          vscode.window
-            .showInformationMessage('AsciiDoc Live Electron: Viewer Disonnected!');
-        });
+      vscode.window
+        .showInformationMessage('AsciiDoc Live Electron: Viewer Disonnected!');
+    });
 
 
 

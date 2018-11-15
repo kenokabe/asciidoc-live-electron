@@ -1,6 +1,6 @@
 interface timeline {
   type: string;
-  [now: string]: unknown;
+  [now: string]: any;
   sync: Function;
 }
 

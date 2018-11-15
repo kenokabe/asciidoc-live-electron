@@ -1,17 +1,16 @@
-/// <reference types="socket.io-client" />
-
 import { T, now } from "./timeline-monad";
 import { allTL } from "./allTL";
-import { Socket } from 'net';
 import * as vscode from 'vscode';
+
+const path = require('path');
 
 interface timeline {
   type: string;
-  [now: string]: unknown;
+  [now: string]: any;
   sync: Function;
 }
 
-const watch_emit = (connectionTL: timeline) => {
+const connect_observer = (connectionTL: timeline) => {
 
   const intervalTL = T(
     (self: timeline) => {
@@ -32,13 +31,38 @@ const watch_emit = (connectionTL: timeline) => {
       )
   );
 
+
+  const pathTL = T();
+
   const changeSelectionTL = T(
     (self: timeline) =>
       (vscode.window
         .onDidChangeTextEditorSelection(
           (info: object) => {
-            infoTL[now] = info;
-            self[now] = true;
+
+            pathTL[now] = (vscode.window
+              .activeTextEditor === undefined)
+              ? undefined
+              : vscode.window
+                .activeTextEditor
+                .document.uri.fsPath;
+
+            const dir_name =
+              (pathTL[now] === undefined)
+                ? undefined
+                : ((path.extname(pathTL[now]) === ".adoc")
+                  || (path.extname(pathTL[now]) === ".asciidoc"))
+
+                  ? {
+                    dir: path.dirname(pathTL[now]),
+                    name: path.basename(pathTL[now])
+                  }
+                  : undefined;
+
+            (dir_name === undefined)
+              ? undefined
+              : ((infoTL[now] = info) &&
+                (self[now] = dir_name));
           })
       )
   );
@@ -51,9 +75,6 @@ const watch_emit = (connectionTL: timeline) => {
         .sync(() => self[now] = true);
     }
   );
-
-  // vscode.window.activeTextEditor.document.isUntitled
-
   // Get the current text editor
   const textTL = T(
     (self: timeline) => allTL
@@ -71,27 +92,27 @@ const watch_emit = (connectionTL: timeline) => {
   const socketTL = ((connectionTL: timeline) =>
     T(
       (self: timeline) => self
-        .sync((a: undefined) => {
+        .sync((obj: object) => {
 
           (connectionTL[now]
             === undefined)
             ? undefined
-            : (connectionTL[now] as Socket)
-              .emit("event", (a));
-
+            : (connectionTL[now])
+              .emit("event", obj);
         })
     )
   )(connectionTL);
 
-  const nonTL = textTL
+  const noneTL = textTL
     .sync(
       () => (socketTL[now] = {
         text: textTL[now],
-        line: (infoTL[now] as vscode.TextEditorSelectionChangeEvent)
+        dir_name: changeSelectionTL[now],
+        line: infoTL[now]
           .selections[0]
           .active
           .line,
-        lines: (infoTL[now] as vscode.TextEditorSelectionChangeEvent)
+        lines: infoTL[now]
           .textEditor
           .document
           .lineCount
@@ -101,8 +122,7 @@ const watch_emit = (connectionTL: timeline) => {
   return true;
 };
 
-export { watch_emit };
-
+export { connect_observer };
 
 
 

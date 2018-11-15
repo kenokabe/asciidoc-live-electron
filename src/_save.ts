@@ -3,7 +3,7 @@ import * as vscode from 'vscode';
 import { T, now } from "./timeline-monad";
 interface timeline {
   type: string;
-  [now: string]: unknown;
+  [now: string]: any;
   sync: Function;
 }
 
@@ -13,14 +13,15 @@ const save = (connectionTL: timeline) => () => {
   vscode.window
     .showInformationMessage('AsciiDoc Live Electron: Saving HTML of the doc on Viewer...');
 
-  const f = () =>
+  const f = (name: string) =>
     vscode.window
-      .showInformationMessage('AsciiDoc Live Electron: HTML file Saved to the same directory.');
+      .showInformationMessage("AsciiDoc Live Electron: " + name
+        + ".html Saved to the same directory.");
 
   (connectionTL[now]
     === undefined)
     ? undefined
-    : (connectionTL[now] as Socket)
+    : connectionTL[now]
       .emit("save", f);
 }
 
