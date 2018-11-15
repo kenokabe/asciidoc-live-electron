@@ -2,9 +2,9 @@ import { T, now } from
   "./timeline-monad.js";
 
 interface timeline {
-  type: string,
-  [now: string]: unknown,
-  sync: Function
+  type: string;
+  [now: string]: unknown;
+  sync: Function;
 }
 
 const allTL = (TLs: timeline[]) => T(

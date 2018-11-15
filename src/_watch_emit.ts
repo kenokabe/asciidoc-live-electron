@@ -6,12 +6,12 @@ import { Socket } from 'net';
 import * as vscode from 'vscode';
 
 interface timeline {
-  type: string,
-  [now: string]: unknown,
-  sync: Function
+  type: string;
+  [now: string]: unknown;
+  sync: Function;
 }
 
-const watch_emit = (socket: Socket) => {
+const watch_emit = (connectionTL: timeline) => {
 
   const intervalTL = T(
     (self: timeline) => {
@@ -22,7 +22,17 @@ const watch_emit = (socket: Socket) => {
 
   const infoTL = T();
 
-  const triggerTL = T(
+  const changeTextTL = T(
+    (self: timeline) =>
+      (vscode.workspace
+        .onDidChangeTextDocument(
+          (info: object) => {
+            self[now] = true;
+          })
+      )
+  );
+
+  const changeSelectionTL = T(
     (self: timeline) =>
       (vscode.window
         .onDidChangeTextEditorSelection(
@@ -33,9 +43,22 @@ const watch_emit = (socket: Socket) => {
       )
   );
 
+  const changeTL = T(
+    (self: timeline) => {
+      changeTextTL
+        .sync(() => self[now] = true);
+      changeSelectionTL
+        .sync(() => self[now] = true);
+    }
+  );
+
+  // vscode.window.activeTextEditor.document.isUntitled
+
   // Get the current text editor
-  const selectTL = T(
-    (self: timeline) => allTL([triggerTL, intervalTL])
+  const textTL = T(
+    (self: timeline) => allTL
+      ([changeTL,
+        intervalTL])
       .sync(() => vscode.window.activeTextEditor)
       .sync((editor: vscode.TextEditor) =>
         editor.document)
@@ -45,20 +68,25 @@ const watch_emit = (socket: Socket) => {
         (self[now] = docContent))
   );
 
-  const socketTL = ((socket: Socket) =>
+  const socketTL = ((connectionTL: timeline) =>
     T(
       (self: timeline) => self
         .sync((a: undefined) => {
-          socket.emit("event", (a));
-          return a;
+
+          (connectionTL[now]
+            === undefined)
+            ? undefined
+            : (connectionTL[now] as Socket)
+              .emit("event", (a));
+
         })
     )
-  )(socket);
+  )(connectionTL);
 
-  const nonTL = selectTL
+  const nonTL = textTL
     .sync(
       () => (socketTL[now] = {
-        text: selectTL[now],
+        text: textTL[now],
         line: (infoTL[now] as vscode.TextEditorSelectionChangeEvent)
           .selections[0]
           .active
