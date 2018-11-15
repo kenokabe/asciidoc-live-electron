@@ -1,4 +1,5 @@
-/// <reference types="socket.io-client" />
+
+/// <reference types="ws" />
 
 import * as vscode from 'vscode';
 import { T, now } from "./timeline-monad";
@@ -8,9 +9,11 @@ interface timeline {
   sync: Function;
 }
 
-import { connect_observer } from "./_connect-observer"
+import { connect_observer } from "./_connect-observer";
 
-const io = require("socket.io-client");
+const WebSocket = require('ws');
+
+const client = new WebSocket("http://localhost:3999");
 
 const connect = (connectionTL: timeline) => () => {
   // The code you place here will be executed every time your command is executed
@@ -19,34 +22,31 @@ const connect = (connectionTL: timeline) => () => {
   vscode.window
     .showInformationMessage('AsciiDoc Live Electron: Connecting to Viewer...');
 
-  connectionTL[now] =
-    (connectionTL[now] !== undefined)
-      ? (() => {
-        vscode.window
-          .showInformationMessage('AsciiDoc Live Electron: Viewer is already Connected.');
-        return undefined;
-      })()
-      : io('http://localhost:3999', {
-        reconnection: false
-      });
-
-  connectionTL[now]
-    .on('connect', () => {
-
+  (connectionTL[now] !== undefined)
+    ? (() => {
       vscode.window
-        .showInformationMessage('AsciiDoc Live Electron: Viewer Connected!');
+        .showInformationMessage('AsciiDoc Live Electron: Viewer is already Connected.');
+    })()
+    : (() => {
+      client
+        .on('message', (data: object) => {
 
-      connect_observer(connectionTL);
-    })
-    .on('event', (data: object) => {
+          vscode.window
+            .showInformationMessage('AsciiDoc Live Electron: Viewer Connected!');
 
-    })
-    .on('disconnect', () => {
-      connectionTL[now] = undefined;
+          connectionTL[now] = client;
+          connect_observer(connectionTL);
 
-      vscode.window
-        .showInformationMessage('AsciiDoc Live Electron: Viewer Disonnected!');
-    });
+        })
+        .on('close', () => {
+          connectionTL[now] = undefined;
+
+          vscode.window
+            .showInformationMessage('AsciiDoc Live Electron: Viewer Disonnected!');
+        });
+
+    })()
+
 
 
 

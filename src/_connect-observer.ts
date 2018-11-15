@@ -98,7 +98,10 @@ const connect_observer = (connectionTL: timeline) => {
             === undefined)
             ? undefined
             : (connectionTL[now])
-              .emit("event", obj);
+              .send({
+                cmd: "event",
+                data: obj
+              });
         })
     )
   )(connectionTL);

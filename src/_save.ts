@@ -7,7 +7,6 @@ interface timeline {
   sync: Function;
 }
 
-
 const save = (connectionTL: timeline) => () => {
   // Display a message box to the user
   vscode.window
@@ -22,7 +21,10 @@ const save = (connectionTL: timeline) => () => {
     === undefined)
     ? undefined
     : connectionTL[now]
-      .emit("save", f);
+      .send({
+        cmd: "save",
+        data: f
+      });
 }
 
 export { save };

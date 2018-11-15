@@ -1,14 +1,13 @@
 'use strict';
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
-/// <reference types="socket.io-client" />
 
 import * as vscode from 'vscode';
 
 import { T, now } from "./timeline-monad";
 
-import {connect} from "./_connect";
-import {save} from "./_save";
+import { connect } from "./_connect";
+import { save } from "./_save";
 
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
@@ -24,7 +23,7 @@ export function activate(context: vscode.ExtensionContext) {
   let disposable =
     vscode.commands
       .registerCommand('extension.asciidoc-live-electron-connect',
-       connect(connectionTL));
+        connect(connectionTL));
 
   let disposable1 =
     vscode.commands
