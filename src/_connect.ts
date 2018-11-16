@@ -28,22 +28,25 @@ const connect = (connectionTL: timeline) => () => {
         .showInformationMessage('AsciiDoc Live Electron: Viewer is already Connected.');
     })()
     : (() => {
+
       client
-        .on('message', (data: object) => {
+        .addEventListener('open',
+          () => {
+            vscode.window
+              .showInformationMessage('AsciiDoc Live Electron: Viewer Connected!');
 
-          vscode.window
-            .showInformationMessage('AsciiDoc Live Electron: Viewer Connected!');
+            connectionTL[now] = client;
+            //    connect_observer(connectionTL);
+          });
 
-          connectionTL[now] = client;
-          connect_observer(connectionTL);
+      client
+        .addEventListener('close',
+          () => {
+            vscode.window
+              .showInformationMessage('AsciiDoc Live Electron: Viewer Disonnected!');
 
-        })
-        .on('close', () => {
-          connectionTL[now] = undefined;
-
-          vscode.window
-            .showInformationMessage('AsciiDoc Live Electron: Viewer Disonnected!');
-        });
+            connectionTL[now] = undefined;
+          });
 
     })()
 
