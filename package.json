@@ -35,11 +35,11 @@
   },
   "devDependencies": {
     "@types/mocha": "^2.2.42",
-    "@types/node": "^8.10.38",
     "typescript": "^2.6.1",
     "vscode": "^1.1.21"
   },
   "dependencies": {
+    "@types/node": "^10.12.9",
     "json-socket-international": "*"
   }
 }
