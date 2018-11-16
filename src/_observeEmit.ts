@@ -9,8 +9,14 @@ interface timeline {
   [now: string]: any;
   sync: Function;
 }
+interface target {
+  host: string;
+  port: number;
+}
 
-const connect_observer = (connectionTL: timeline) => {
+const JsonSocket = require('json-socket-international');
+
+const observeEmit = (target: target) => {
 
   const intervalTL = T(
     (self: timeline) => {
@@ -30,7 +36,6 @@ const connect_observer = (connectionTL: timeline) => {
           })
       )
   );
-
 
   const pathTL = T();
 
@@ -89,22 +94,28 @@ const connect_observer = (connectionTL: timeline) => {
         (self[now] = docContent))
   );
 
-  const socketTL = ((connectionTL: timeline) =>
+  const socketTL = ((target: target) =>
     T(
       (self: timeline) => self
         .sync((obj: object) => {
 
-          (connectionTL[now]
-            === undefined)
-            ? undefined
-            : (connectionTL[now])
-              .send({
-                cmd: "event",
+          JsonSocket
+            .sendSingleMessage(
+              target.port,
+              target.host,
+              {
+                cmd: "render",
                 data: obj
-              });
+              },
+              (err: any) => {
+                if (err) {
+                  //Something went wrong
+                  throw err;
+                }
+              })
         })
     )
-  )(connectionTL);
+  )(target);
 
   const noneTL = textTL
     .sync(
@@ -125,7 +136,7 @@ const connect_observer = (connectionTL: timeline) => {
   return true;
 };
 
-export { connect_observer };
+export { observeEmit };
 
 
 

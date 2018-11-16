@@ -7,7 +7,19 @@ import * as vscode from 'vscode';
 import { T, now } from "./timeline-monad";
 
 import { connect } from "./_connect";
+
+import { observeEmit } from "./_observeEmit";
+
 import { save } from "./_save";
+
+const port = 3999;
+//The same port that the server is listening on
+const host = '127.0.0.1';
+
+const target = {
+  host: host,
+  port: port
+}
 
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
@@ -16,18 +28,17 @@ export function activate(context: vscode.ExtensionContext) {
   // Use the console to output diagnostic information (console.log) and errors (console.error)
   // This line of code will only be executed once when your extension is activated
   console.log('Congratulations, your extension "asciidoc-live-electron" is now active!');
-  const connectionTL = T();
-  // The command has been defined in the package.json file
-  // Now provide the implementation of the command with  registerCommand
-  // The commandId parameter must match the command field in package.json
+
+  observeEmit(target);
+
   let disposable =
     vscode.commands
       .registerCommand('extension.asciidoc-live-electron-connect',
-        connect(connectionTL));
+        () => connect(target));
 
   let disposable1 =
     vscode.commands
-      .registerCommand('extension.asciidoc-live-electron-saveHTML', save(connectionTL));
+      .registerCommand('extension.asciidoc-live-electron-saveHTML', () => save(target));
 
   context.subscriptions.push(disposable);
   context.subscriptions.push(disposable1);

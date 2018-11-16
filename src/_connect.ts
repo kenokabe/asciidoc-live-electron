@@ -1,6 +1,4 @@
 
-/// <reference types="ws" />
-
 import * as vscode from 'vscode';
 import { T, now } from "./timeline-monad";
 interface timeline {
@@ -8,51 +6,38 @@ interface timeline {
   [now: string]: any;
   sync: Function;
 }
-
-import { connect_observer } from "./_connect-observer";
-
-const WebSocket = require('ws');
-
-const client = new WebSocket("http://localhost:3999");
-
-const connect = (connectionTL: timeline) => () => {
-  // The code you place here will be executed every time your command is executed
-
-  // Display a message box to the user
-  vscode.window
-    .showInformationMessage('AsciiDoc Live Electron: Connecting to Viewer...');
-
-  (connectionTL[now] !== undefined)
-    ? (() => {
-      vscode.window
-        .showInformationMessage('AsciiDoc Live Electron: Viewer is already Connected.');
-    })()
-    : (() => {
-
-      client
-        .addEventListener('open',
-          () => {
-            vscode.window
-              .showInformationMessage('AsciiDoc Live Electron: Viewer Connected!');
-
-            connectionTL[now] = client;
-            //    connect_observer(connectionTL);
-          });
-
-      client
-        .addEventListener('close',
-          () => {
-            vscode.window
-              .showInformationMessage('AsciiDoc Live Electron: Viewer Disonnected!');
-
-            connectionTL[now] = undefined;
-          });
-
-    })()
-
-
-
-
+interface target {
+  host: string;
+  port: number;
 }
 
+const JsonSocket = require('json-socket-international');
+
+const connect = (target: target) => {
+  vscode.window
+    .showInformationMessage('AsciiDoc Live Electron: Ping-Testing to Viewer...');
+
+  interface msg {
+    cmd: string;
+    data: any;
+  }
+
+  JsonSocket
+    .sendSingleMessageAndReceive(
+      target.port,
+      target.host,
+      {
+        cmd: "ping",
+        data: {}
+      },
+      (err: any, msg: msg) => {
+        if (err) {
+          //Something went wrong
+          throw err;
+        }
+        vscode.window
+          .showInformationMessage("AsciiDoc Live Electron: " + msg.data);
+      });
+
+}
 export { connect };

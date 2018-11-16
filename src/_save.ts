@@ -1,4 +1,4 @@
-import { Socket } from 'net';
+
 import * as vscode from 'vscode';
 import { T, now } from "./timeline-monad";
 interface timeline {
@@ -6,25 +6,39 @@ interface timeline {
   [now: string]: any;
   sync: Function;
 }
+interface target {
+  host: string;
+  port: number;
+}
 
-const save = (connectionTL: timeline) => () => {
+const JsonSocket = require('json-socket-international');
+
+const save = (target: target) => {
   // Display a message box to the user
   vscode.window
     .showInformationMessage('AsciiDoc Live Electron: Saving HTML of the doc on Viewer...');
-
-  const f = (name: string) =>
-    vscode.window
-      .showInformationMessage("AsciiDoc Live Electron: " + name
-        + ".html Saved to the same directory.");
-
-  (connectionTL[now]
-    === undefined)
-    ? undefined
-    : connectionTL[now]
-      .send({
+  interface msg {
+    cmd: string;
+    data: any;
+  }
+  JsonSocket
+    .sendSingleMessageAndReceive(
+      target.port,
+      target.host,
+      {
         cmd: "save",
-        data: f
+        data: {}
+      },
+      (err: any, msg: msg) => {
+        if (err) {
+          //Something went wrong
+          throw err;
+        }
+        vscode.window
+          .showInformationMessage("AsciiDoc Live Electron: " + msg.data
+            + ".html Saved to the same directory.");
       });
+
 }
 
 export { save };

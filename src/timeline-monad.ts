@@ -10,7 +10,7 @@ const T = (timeFunction: Function = () => { }): timeline =>
   ((observers: Function[]) => {
 
     const timeline: timeline = ((observers: Function[]) => {
-      let currentVal: unknown = undefined; //immutable in the frozen universe
+      let currentVal: any = undefined; //immutable in the frozen universe
       const self: timeline = {
         type: "timeline-monad",
         //type used for TTX => TX
