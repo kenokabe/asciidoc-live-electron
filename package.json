@@ -34,12 +34,12 @@
     "test": "npm run compile && node ./node_modules/vscode/bin/test"
   },
   "devDependencies": {
+    "@types/node": "^10.12.9",
     "@types/mocha": "^2.2.42",
     "typescript": "^2.6.1",
     "vscode": "^1.1.21"
   },
   "dependencies": {
-    "@types/node": "^10.12.9",
     "json-socket-international": "*"
   }
 }

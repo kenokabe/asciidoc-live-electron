@@ -43,7 +43,7 @@ const observeEmit = (target: target) => {
     (self: timeline) =>
       (vscode.window
         .onDidChangeTextEditorSelection(
-          (info: object) => {
+          (info) => {
 
             pathTL[now] = (vscode.window
               .activeTextEditor === undefined)
