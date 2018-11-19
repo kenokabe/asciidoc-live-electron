@@ -16,12 +16,13 @@ interface target {
 
 const JsonSocket = require('json-socket-international');
 
+const delay = 500;
 const observeEmit = (target: target) => {
 
   const intervalTL = T(
     (self: timeline) => {
       const f = () => (self[now] = true);
-      setInterval(f, 1000);
+      setInterval(f, delay);
     }
   );
 
