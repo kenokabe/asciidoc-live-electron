@@ -16,7 +16,7 @@ interface target {
 
 const JsonSocket = require('json-socket-international');
 
-const delay = 500;
+const delay = 250;
 const observeEmit = (target: target) => {
 
   const intervalTL = T(
