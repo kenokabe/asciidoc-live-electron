@@ -1,16 +1,19 @@
 {
   "name": "asciidoc-live-electron",
-  "displayName": "asciidoc-live-electron",
+  "displayName": "AsciiDoc Live Electron",
   "description": "AsciiDoc Live Electron",
   "version": "0.0.1",
   "publisher": "kenokabe",
+  "author": "Ken Okabe <kenokabe@gmail.com>",
+  "license": "MIT",
   "engines": {
     "vscode": "^1.28.0"
   },
   "categories": [
-    "Other"
+    "Programming Languages"
   ],
   "activationEvents": [
+    "onLanguage:asciidoc",
     "onCommand:extension.asciidoc-live-electron-connect"
   ],
   "main": "./out/extension",
@@ -18,7 +21,7 @@
     "commands": [
       {
         "command": "extension.asciidoc-live-electron-connect",
-        "title": "AsciiDoc Live Electron: Activate & Ping-Test to Viewer"
+        "title": "AsciiDoc Live Electron: Ping to Viewer"
       },
       {
         "command": "extension.asciidoc-live-electron-saveHTML",
