@@ -33,6 +33,8 @@ const connect = (target: target) => {
       (err: any, msg: msg) => {
         if (err) {
           //Something went wrong
+          vscode.window
+            .showInformationMessage("AsciiDoc Live Electron: connection error");
           throw err;
         }
         vscode.window
