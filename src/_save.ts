@@ -32,6 +32,7 @@ const save = (target: target) => {
       (err: any, msg: msg) => {
         if (err) {
           //Something went wrong
+          console.log("Something went wrong");
           throw err;
         }
         vscode.window

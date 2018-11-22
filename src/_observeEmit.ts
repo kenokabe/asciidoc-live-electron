@@ -16,17 +16,20 @@ interface target {
 
 const JsonSocket = require('json-socket-international');
 
-const delay = 250;
+const delay = 500;
 const observeEmit = (target: target) => {
 
+  console.log("observeEmit");
+  /*
   const intervalTL = T(
     (self: timeline) => {
       const f = () => (self[now] = true);
       setInterval(f, delay);
     }
   );
-
-  const infoTL = T();
+  */
+  const renderDoneTL = T();
+  renderDoneTL[now] = true;//init
 
   const changeTextTL = T(
     (self: timeline) =>
@@ -39,6 +42,8 @@ const observeEmit = (target: target) => {
   );
 
   const pathTL = T();
+
+  const lineTL = T();
 
   const changeSelectionTL = T(
     (self: timeline) =>
@@ -65,10 +70,17 @@ const observeEmit = (target: target) => {
                   }
                   : undefined;
 
+            const line = info.selections[0]
+              .active.line;
             (dir_name === undefined)
               ? undefined
-              : ((infoTL[now] = info) &&
-                (self[now] = dir_name));
+              : ((line !== lineTL[now]) ||
+                (dir_name.dir !== self[now].dir) ||
+                (dir_name.name !== self[now].name))
+
+                ? ((lineTL[now] = line) &&
+                  (self[now] = dir_name))
+                : false;
           })
       )
   );
@@ -85,7 +97,7 @@ const observeEmit = (target: target) => {
   const textTL = T(
     (self: timeline) => allTL
       ([changeTL,
-        intervalTL])
+        renderDoneTL])
       .sync(() => vscode.window.activeTextEditor)
       .sync((editor: vscode.TextEditor) =>
         editor.document)
@@ -100,19 +112,25 @@ const observeEmit = (target: target) => {
       (self: timeline) => self
         .sync((obj: object) => {
 
+          interface msg {
+            cmd: string;
+            data: any;
+          };
           JsonSocket
-            .sendSingleMessage(
+            .sendSingleMessageAndReceive(
               target.port,
               target.host,
               {
                 cmd: "render",
                 data: obj
               },
-              (err: any) => {
+              (err: any, msg: msg) => {
                 if (err) {
                   //Something went wrong
+                  console.log("Something went wrong");
                   throw err;
                 }
+                renderDoneTL[now] = true;
               })
         })
     )
@@ -123,14 +141,7 @@ const observeEmit = (target: target) => {
       () => (socketTL[now] = {
         text: textTL[now],
         dir_name: changeSelectionTL[now],
-        line: infoTL[now]
-          .selections[0]
-          .active
-          .line,
-        lines: infoTL[now]
-          .textEditor
-          .document
-          .lineCount
+        line: lineTL[now]
       })
     );
 
