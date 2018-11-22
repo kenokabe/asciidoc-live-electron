@@ -1,5 +1,5 @@
 import { T, now } from "./timeline-monad";
-import { allResetTL } from "./allResetTL";
+import { allThenResetTL } from "./allThenResetTL";
 import * as vscode from 'vscode';
 
 const Path = require('path');
@@ -114,7 +114,7 @@ const observeEmit = (target: target) => {
         (self[now] = docContent))
   );
 
-  const textThenSocketTL = allResetTL
+  const textThenSocketTL = allThenResetTL
     ([textTL,
       renderReadyTL])
     .sync(
