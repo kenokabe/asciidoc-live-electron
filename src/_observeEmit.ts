@@ -2,7 +2,7 @@ import { T, now } from "./timeline-monad";
 import { allResetTL } from "./allResetTL";
 import * as vscode from 'vscode';
 
-const path = require('path');
+const Path = require('path');
 
 interface timeline {
   type: string;
@@ -32,23 +32,26 @@ const observeEmit = (target: target) => {
   );
 
 
-  const pathTL = T();
-
   const lineTL = T();
 
-  const isAdoc = () => {
+  const getDirNameObj = () => {
 
-    pathTL[now] = (vscode.window
+    const path = (vscode.window
       .activeTextEditor === undefined)
       ? undefined
       : vscode.window
         .activeTextEditor
         .document.uri.fsPath;
 
-    return (pathTL[now] === undefined)
-      ? false
-      : ((path.extname(pathTL[now]) === ".adoc")
-        || (path.extname(pathTL[now]) === ".asciidoc"));
+    return (path === undefined)
+      ? undefined
+      : ((Path.extname(path) !== ".adoc")
+        && (Path.extname(path) !== ".asciidoc"))
+        ? undefined
+        : {
+          dir: Path.dirname(path),
+          name: Path.basename(path)
+        };
   }
 
 
@@ -59,9 +62,9 @@ const observeEmit = (target: target) => {
           (info: object) => {
             console.log(changeSelectionTL[now].name);
 
-            isAdoc()
-              ? self[now] = true
-              : undefined;
+            (getDirNameObj() === undefined)
+              ? undefined
+              : self[now] = true;
           })
       )
   );
@@ -72,22 +75,19 @@ const observeEmit = (target: target) => {
       (vscode.window
         .onDidChangeTextEditorSelection(
           (info) => {
-            const dir_name = isAdoc()
-              ? {
-                dir: path.dirname(pathTL[now]),
-                name: path.basename(pathTL[now])
-              }
-              : undefined;
 
             const line = info.selections[0]
               .active.line;
-            (dir_name === undefined)
+
+            const dirNameObj = getDirNameObj();
+
+            (dirNameObj === undefined)
               ? undefined
               : ((line !== lineTL[now]) ||
-                (dir_name.dir !== self[now].dir) ||
-                (dir_name.name !== self[now].name))
+                (dirNameObj.dir !== self[now].dir) ||
+                (dirNameObj.name !== self[now].name))
                 ? ((lineTL[now] = line) &&
-                  (self[now] = dir_name))
+                  (self[now] = dirNameObj))
                 : false;
           })
       )
