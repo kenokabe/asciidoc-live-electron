@@ -7,7 +7,7 @@ interface timeline {
   sync: Function;
 }
 
-const allTL = (TLs: timeline[]) => T(
+const allResetTL = (TLs: timeline[]) => T(
   (self: timeline) => {
     const updateFlagsTL = T(
       (self: timeline) =>
@@ -36,4 +36,4 @@ const allTL = (TLs: timeline[]) => T(
   }
 );
 
-export { allTL };
+export { allResetTL };

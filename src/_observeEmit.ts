@@ -1,5 +1,5 @@
 import { T, now } from "./timeline-monad";
-import { allTL } from "./allTL";
+import { allResetTL } from "./allResetTL";
 import * as vscode from 'vscode';
 
 const path = require('path');
@@ -16,7 +16,7 @@ interface target {
 
 const JsonSocket = require('json-socket-international');
 
-const delay = 500;
+const maxDelayLimit = 500;
 const observeEmit = (target: target) => {
 
   console.log("observeEmit");
@@ -27,7 +27,7 @@ const observeEmit = (target: target) => {
   const intervalTL = T(
     (self: timeline) => {
       const f = () => (renderReadyTL[now] = true);
-      setInterval(f, delay);
+      setInterval(f, maxDelayLimit);
     }
   );
 
@@ -86,7 +86,6 @@ const observeEmit = (target: target) => {
               : ((line !== lineTL[now]) ||
                 (dir_name.dir !== self[now].dir) ||
                 (dir_name.name !== self[now].name))
-
                 ? ((lineTL[now] = line) &&
                   (self[now] = dir_name))
                 : false;
@@ -115,7 +114,7 @@ const observeEmit = (target: target) => {
         (self[now] = docContent))
   );
 
-  const textThenSocketTL = allTL
+  const textThenSocketTL = allResetTL
     ([textTL,
       renderReadyTL])
     .sync(
