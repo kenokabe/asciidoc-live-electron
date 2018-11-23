@@ -16,7 +16,7 @@ interface target {
 
 const JsonSocket = require('json-socket-international');
 
-const maxDelayLimit = 500;
+const maxDelayLimit = 1000;
 const observeEmit = (target: target) => {
 
   console.log("observeEmit");
