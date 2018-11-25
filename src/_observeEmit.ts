@@ -46,7 +46,9 @@ const observeEmit = (target: target) => {
     return (path === undefined)
       ? undefined
       : ((Path.extname(path) !== ".adoc")
-        && (Path.extname(path) !== ".asciidoc"))
+        && (Path.extname(path) !== ".asciidoc")
+        && (Path.extname(path) !== ".ad")
+        && (Path.extname(path) !== ".adc"))
         ? undefined
         : {
           dir: Path.dirname(path),

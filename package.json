@@ -21,11 +21,11 @@
     "commands": [
       {
         "command": "extension.asciidoc-live-electron-connect",
-        "title": "AsciiDoc Live Electron: Ping to Viewer"
+        "title": "AsciiDoc-Live-Electron: Ping to Viewer"
       },
       {
         "command": "extension.asciidoc-live-electron-saveHTML",
-        "title": "AsciiDoc Live Electron: Save HTML of the doc on Viewer"
+        "title": "AsciiDoc-Live-Electron: Save HTML of the doc on Viewer"
       }
     ]
   },
