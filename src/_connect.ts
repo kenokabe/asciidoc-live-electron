@@ -10,7 +10,7 @@ const JsonSocket = require('json-socket-international');
 
 const connect = (target: target) => {
   vscode.window
-    .showInformationMessage('AsciiDoc Live Electron: Ping-Testing to Viewer...');
+    .showInformationMessage('AsciiDoc-Live-Electron: Ping-Testing to Viewer...');
 
   interface msg {
     cmd: string;
@@ -29,11 +29,11 @@ const connect = (target: target) => {
         if (err) {
           //Something went wrong
           vscode.window
-            .showInformationMessage("AsciiDoc Live Electron: connection error");
+            .showInformationMessage("AsciiDoc-Live-Electron: connection error");
           throw err;
         }
         vscode.window
-          .showInformationMessage("AsciiDoc Live Electron: " + msg.data);
+          .showInformationMessage("AsciiDoc-Live-Electron: " + msg.data);
       });
 
 }

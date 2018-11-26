@@ -11,7 +11,7 @@ const JsonSocket = require('json-socket-international');
 const save = (target: target) => {
   // Display a message box to the user
   vscode.window
-    .showInformationMessage('AsciiDoc Live Electron: Saving HTML of the doc on Viewer...');
+    .showInformationMessage('AsciiDoc-Live-Electron: Saving HTML of the doc on Viewer...');
   interface msg {
     cmd: string;
     data: any;
@@ -31,7 +31,7 @@ const save = (target: target) => {
           throw err;
         }
         vscode.window
-          .showInformationMessage("AsciiDoc Live Electron: " + msg.data
+          .showInformationMessage("AsciiDoc-Live-Electron: " + msg.data
             + ".html Saved to the same directory.");
       });
 

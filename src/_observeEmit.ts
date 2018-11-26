@@ -104,8 +104,7 @@ const observeEmit = (target: target) => {
     });
 
   const cloneObj = (dirname: dirname) =>
-    Object.assign(
-      {}, dirname);
+    Object.assign({}, dirname);
 
   const currentAdocTL = T(
     (self: dirnameTL) => {
@@ -122,7 +121,7 @@ const observeEmit = (target: target) => {
   );
 
   currentAdocTL.sync(
-    (obj: any) => popTL.now = "currentAdoc " + JSON.stringify(obj)
+    (dirname: dirname) => popTL.now = "AsciiDoc-Live-Electron: " + dirname.name
   );
 
   const changeSelectionTL = T(
@@ -142,7 +141,6 @@ const observeEmit = (target: target) => {
 
                 const lineSame =
                   (line === lineTL.now);
-                popTL.now = "line?? " + lineTL.now + "-->  " + line + " " + lineSame;
                 lineTL.now = line;
 
                 const dirNameSame = ((
@@ -162,10 +160,6 @@ const observeEmit = (target: target) => {
     }
   );
 
-
-  changeSelectionTL.sync(
-    (obj: any) => popTL.now = "same file+line changed!!!" + JSON.stringify(obj)
-  );
 
   const changeTextTL = T(
     (self: timeline) =>
