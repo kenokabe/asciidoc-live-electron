@@ -4,8 +4,6 @@
 
 import * as vscode from 'vscode';
 
-import { T, now } from "./timeline-monad";
-
 import { connect } from "./_connect";
 
 import { observeEmit } from "./_observeEmit";

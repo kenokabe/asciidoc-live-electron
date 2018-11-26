@@ -1,10 +1,10 @@
 interface timeline {
   type: string;
-  [now: string]: any;
+  now: any;
   sync: Function;
 }
-
-const now: string = "now";//time-index of the current time
+//the timeline property `now` means
+//time-index of the current time
 // on the timeline from now until the future / next - now
 const T = (timeFunction: Function = () => { }): timeline =>
   ((observers: Function[]) => {
@@ -14,12 +14,14 @@ const T = (timeFunction: Function = () => { }): timeline =>
       const self: timeline = {
         type: "timeline-monad",
         //type used for TTX => TX
-        get now() { //getter retuens a value of now
+        get now() { //getter returns a value of now
           return currentVal;
         },
         set now(val) { //setter <- timeline becomes observable
           currentVal = val; //set the val
-          const nouse = observers.map((f: Function) => f(val)); //sync(f)
+          const nouse = (val === undefined)
+            ? undefined//undefined never triggers
+            : observers.map((f: Function) => f(val)); //sync(f)
         },
         sync: ((observers: Function[]) => (f: Function) => {
           const timeline: timeline = self;
@@ -33,14 +35,15 @@ const T = (timeFunction: Function = () => { }): timeline =>
             const nouse =
               (newVal !== undefined) &&
                 (newVal.type === timeline.type)
-                ? newVal.sync((a: undefined) => syncTL[now] = a)
-                : syncTL[now] = newVal
+                ? newVal.sync((a: undefined) => syncTL.now = a)
+                : syncTL.now = newVal
             return true;
           });
-          // trigger if the timeline[now] is already filled 
-          const nouse1 = (timeline[now] === undefined)
+          // trigger if the timeline.now
+          // is already filled 
+          const nouse1 = (timeline.now === undefined)
             ? undefined //if undefined, do nothing
-            : timeline[now] = timeline[now];
+            : timeline.now = timeline.now;
 
           return syncTL;
         })(observers),
@@ -61,4 +64,4 @@ const T = (timeFunction: Function = () => { }): timeline =>
 
   })([]) //observers = []
     .init(timeFunction); //initiate & return the timeline
-export { T, now };
+export { T };

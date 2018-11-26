@@ -1,4 +1,4 @@
-import { T, now } from "./timeline-monad";
+import { T } from "./timeline-monad";
 import { allThenResetTL } from "./allThenResetTL";
 import * as vscode from 'vscode';
 
@@ -6,13 +6,29 @@ const Path = require('path');
 
 interface timeline {
   type: string;
-  [now: string]: any;
+  now: any;
   sync: Function;
 }
 interface target {
   host: string;
   port: number;
 }
+const consoleTL = ((console) => T(
+  (self: timeline) => self.sync((a: unknown) => {
+    console.log(a);
+    return a;
+  })
+))(console);
+const log = (a: unknown) => (consoleTL.now = a);
+
+const popTL = ((popup: Function) => T(
+  (self: timeline) => self
+    .sync((msg: string) => {
+      popup(msg);
+      return msg;
+    })
+))(vscode.window
+  .showInformationMessage);
 
 const JsonSocket = require('json-socket-international');
 
@@ -20,13 +36,13 @@ const maxDelayLimit = 1000;
 const observeEmit = (target: target) => {
 
   console.log("observeEmit");
-
+  let count = 0;
 
   const renderReadyTL = T();
 
   const intervalTL = T(
     (self: timeline) => {
-      const f = () => (renderReadyTL[now] = true);
+      const f = () => (renderReadyTL.now = true);
       setInterval(f, maxDelayLimit);
     }
   );
@@ -34,111 +50,147 @@ const observeEmit = (target: target) => {
 
   const lineTL = T();
 
-  interface dirNameObj {
+  interface dirname {
     dir: string;
     name: string;
   }
-  const getDirNameObj = (): dirNameObj => {
 
-    const path = (vscode.window
-      .activeTextEditor === undefined)
-      ? undefined
-      : vscode.window
-        .activeTextEditor
-        .document.uri.fsPath;
-
-    return (path === undefined)
-      ? {
-        dir: undefined,
-        name: undefined
-      }
-      : ((Path.extname(path) !== ".adoc")
-        && (Path.extname(path) !== ".asciidoc")
-        && (Path.extname(path) !== ".ad")
-        && (Path.extname(path) !== ".adc"))
-        ? {
-          dir: undefined,
-          name: undefined
-        }
-        : {
-          dir: Path.dirname(path),
-          name: Path.basename(path)
-        };
+  interface dirnameTL {
+    type: string;
+    now: dirname | undefined;
+    sync: Function;
   }
 
+  const getDirNameObj =
+    (editor: vscode.TextEditor | undefined): dirname => {
+
+      const path = (editor === undefined)
+        ? undefined
+        : editor.document.uri.fsPath;
+
+      return (path === undefined)
+        ? {
+          dir: "",
+          name: ""
+        }
+        : ((Path.extname(path) !== ".adoc")
+          && (Path.extname(path) !== ".asciidoc")
+          && (Path.extname(path) !== ".ad")
+          && (Path.extname(path) !== ".adc"))
+          ? {
+            dir: "",
+            name: ""
+          }
+          : {
+            dir: Path.dirname(path),
+            name: Path.basename(path)
+          };
+    };
+
+  //   if undefined, not triggered 
+  //remove undefined of this event automatically
+  const currentActiveEditorTL = T(
+    (self: timeline) => {
+      self.now = vscode.window.activeTextEditor;
+      vscode.window.onDidChangeActiveTextEditor(
+        (editor) => (self.now = editor))
+    }
+  );
+
+  const preAdocTL = T((self: dirnameTL) =>
+    self.now = {
+      dir: "",
+      name: ""
+    });
+
+  const cloneObj = (dirname: dirname) =>
+    Object.assign(
+      {}, dirname);
+
+  const currentAdocTL = T(
+    (self: dirnameTL) => {
+      currentActiveEditorTL
+        .sync((editor: vscode.TextEditor) => {
+          const dirname = getDirNameObj(editor);
+          self.now = (dirname.dir === "")
+            ? undefined// self won't trigger
+            : preAdocTL.now.dir === ""//init
+              ? preAdocTL.now = cloneObj(dirname)
+              : dirname
+        });
+    }
+  );
+
+  currentAdocTL.sync(
+    (obj: any) => popTL.now = "currentAdoc " + JSON.stringify(obj)
+  );
+
+  const changeSelectionTL = T(
+    (self: dirnameTL) => {
+
+      (vscode.window
+        .onDidChangeTextEditorSelection(
+          (info) => {
+            const dirname =
+              getDirNameObj(info.textEditor);
+
+            dirname.dir === ""
+              ? undefined
+              : (() => {
+                const line = info.selections[0]
+                  .active.line;
+
+                const lineSame =
+                  (line === lineTL.now);
+                popTL.now = "line?? " + lineTL.now + "-->  " + line + " " + lineSame;
+                lineTL.now = line;
+
+                const dirNameSame = ((
+                  dirname.dir === preAdocTL.now.dir)
+                  && (dirname.name === preAdocTL.now.name));
+
+                preAdocTL.now = cloneObj(dirname);
+
+                dirNameSame && !lineSame
+                  ? self.now = preAdocTL.now
+                  : undefined;
+
+              })()
+
+          })
+      )
+    }
+  );
+
+
+  changeSelectionTL.sync(
+    (obj: any) => popTL.now = "same file+line changed!!!" + JSON.stringify(obj)
+  );
 
   const changeTextTL = T(
     (self: timeline) =>
       (vscode.workspace
         .onDidChangeTextDocument(
-          (info: object) => {
-            //  console.log(changeSelectionTL[now].name);
-            (getDirNameObj().name === undefined)
+          (info: vscode.TextDocumentChangeEvent) => {
+            getDirNameObj(vscode.window.activeTextEditor)
+              .dir === ""
               ? undefined
-              : self[now] = true;
+              : self.now = true;
           })
       )
   );
 
-
-  const changeSelectionTL = T(
-    (self: timeline) =>
-      (vscode.window
-        .onDidChangeTextEditorSelection(
-          (info) => {
-
-            const line = info.selections[0]
-              .active.line;
-
-            const dirNameObj: dirNameObj =
-              getDirNameObj();
-
-            (dirNameObj.name === undefined)
-              ? undefined
-              : ((line !== lineTL[now]) ||
-                (dirNameObj.dir !== self[now].dir) ||
-                (dirNameObj.name !== self[now].name))
-                ? ((lineTL[now] = line) &&
-                  (self[now] = dirNameObj))
-                : false;
-          })
-      )
-  );
-
-  /*debug
-  changeSelectionTL
-    .sync((obj: dirNameObj) =>
-      vscode.window
-        .showInformationMessage("AsciiDoc Live Electron: " + obj.name)
-    );
-*/
-
-  /*
-    const changeActiveTextEditorTL = T(
-      (self: timeline) =>
-        (vscode.window
-          .onDidChangeActiveTextEditor(
-            (info) => {
-              const dirNameObj = getDirNameObj();
-              (dirNameObj === undefined)
-                ? undefined
-                : ((lineTL[now] = (info as vscode.TextEditor)
-                  .selections[0]
-                  .active.line) &&
-                  (self[now] = dirNameObj))
-            })
-        )
-    );
-   
-  */
   const changeTL = T(
     (self: timeline) => {
-      changeTextTL
-        .sync(() => self[now] = true);
+      currentAdocTL
+        .sync(() => self.now = true);
+
       changeSelectionTL
-        .sync(() => self[now] = true);
-      /*  changeActiveTextEditorTL
-          .sync(() => self[now] = true);*/
+        .sync(() => self.now = true);
+
+      changeTextTL
+        .sync(() => self.now = true);
+
     }
   );
   //  changeTL.sync(console.log);
@@ -151,17 +203,17 @@ const observeEmit = (target: target) => {
       .sync((doc: vscode.TextDocument) =>
         doc.getText())
       .sync((docContent: String) =>
-        (self[now] = docContent))
+        (self.now = docContent))
   );
 
   const textThenSocketTL = allThenResetTL
     ([textTL,
       renderReadyTL])
     .sync(
-      () => (socketTL[now] = {
-        text: textTL[now],
-        dir_name: changeSelectionTL[now],
-        line: lineTL[now]
+      () => (socketTL.now = {
+        text: textTL.now,
+        dir_name: changeSelectionTL.now,
+        line: lineTL.now
       })
     );
 
@@ -183,7 +235,7 @@ const observeEmit = (target: target) => {
                 data: obj
               },
               (err: any, msg: msg) => {
-                renderReadyTL[now] = true;
+                renderReadyTL.now = true;
                 if (err) {
                   //Something went wrong
                   console.log("Socket - something went wrong");

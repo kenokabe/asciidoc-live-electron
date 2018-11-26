@@ -13,8 +13,7 @@
     "Programming Languages"
   ],
   "activationEvents": [
-    "onLanguage:asciidoc",
-    "onCommand:extension.asciidoc-live-electron-connect"
+    "*"
   ],
   "main": "./out/extension",
   "contributes": {

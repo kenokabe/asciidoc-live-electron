@@ -1,11 +1,6 @@
 
 import * as vscode from 'vscode';
-import { T, now } from "./timeline-monad";
-interface timeline {
-  type: string;
-  [now: string]: any;
-  sync: Function;
-}
+
 interface target {
   host: string;
   port: number;
