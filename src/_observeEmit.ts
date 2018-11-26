@@ -34,7 +34,11 @@ const observeEmit = (target: target) => {
 
   const lineTL = T();
 
-  const getDirNameObj = () => {
+  interface dirNameObj {
+    dir: string;
+    name: string;
+  }
+  const getDirNameObj = (): dirNameObj => {
 
     const path = (vscode.window
       .activeTextEditor === undefined)
@@ -44,12 +48,18 @@ const observeEmit = (target: target) => {
         .document.uri.fsPath;
 
     return (path === undefined)
-      ? undefined
+      ? {
+        dir: undefined,
+        name: undefined
+      }
       : ((Path.extname(path) !== ".adoc")
         && (Path.extname(path) !== ".asciidoc")
         && (Path.extname(path) !== ".ad")
         && (Path.extname(path) !== ".adc"))
-        ? undefined
+        ? {
+          dir: undefined,
+          name: undefined
+        }
         : {
           dir: Path.dirname(path),
           name: Path.basename(path)
@@ -62,9 +72,8 @@ const observeEmit = (target: target) => {
       (vscode.workspace
         .onDidChangeTextDocument(
           (info: object) => {
-            console.log(changeSelectionTL[now].name);
-
-            (getDirNameObj() === undefined)
+            //  console.log(changeSelectionTL[now].name);
+            (getDirNameObj().name === undefined)
               ? undefined
               : self[now] = true;
           })
@@ -81,9 +90,10 @@ const observeEmit = (target: target) => {
             const line = info.selections[0]
               .active.line;
 
-            const dirNameObj = getDirNameObj();
+            const dirNameObj: dirNameObj =
+              getDirNameObj();
 
-            (dirNameObj === undefined)
+            (dirNameObj.name === undefined)
               ? undefined
               : ((line !== lineTL[now]) ||
                 (dirNameObj.dir !== self[now].dir) ||
@@ -95,15 +105,43 @@ const observeEmit = (target: target) => {
       )
   );
 
+  /*debug
+  changeSelectionTL
+    .sync((obj: dirNameObj) =>
+      vscode.window
+        .showInformationMessage("AsciiDoc Live Electron: " + obj.name)
+    );
+*/
+
+  /*
+    const changeActiveTextEditorTL = T(
+      (self: timeline) =>
+        (vscode.window
+          .onDidChangeActiveTextEditor(
+            (info) => {
+              const dirNameObj = getDirNameObj();
+              (dirNameObj === undefined)
+                ? undefined
+                : ((lineTL[now] = (info as vscode.TextEditor)
+                  .selections[0]
+                  .active.line) &&
+                  (self[now] = dirNameObj))
+            })
+        )
+    );
+   
+  */
   const changeTL = T(
     (self: timeline) => {
       changeTextTL
         .sync(() => self[now] = true);
       changeSelectionTL
         .sync(() => self[now] = true);
+      /*  changeActiveTextEditorTL
+          .sync(() => self[now] = true);*/
     }
   );
-  changeTL.sync(console.log);
+  //  changeTL.sync(console.log);
   // Get the current text editor
   const textTL = T(
     (self: timeline) => changeTL
@@ -131,9 +169,7 @@ const observeEmit = (target: target) => {
     T(
       (self: timeline) => self
         .sync((obj: object) => {
-
-          console.log("Socket sending");
-
+          //   console.log("Socket sending");
           interface msg {
             cmd: string;
             data: any;
@@ -147,14 +183,13 @@ const observeEmit = (target: target) => {
                 data: obj
               },
               (err: any, msg: msg) => {
-
                 renderReadyTL[now] = true;
                 if (err) {
                   //Something went wrong
                   console.log("Socket - something went wrong");
                   throw err;
                 }
-                console.log("Socket sent and received the done")
+                // console.log("Socket sent and received the done")
               })
         })
     )
