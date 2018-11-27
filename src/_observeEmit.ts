@@ -37,7 +37,6 @@ const minDelayLimit = 200;
 const observeEmit = (target: target) => {
 
   console.log("observeEmit");
-  let count = 0;
 
   const renderReadyTL = T();
 
@@ -47,16 +46,6 @@ const observeEmit = (target: target) => {
       setInterval(f, maxDelayLimit);
     }
   );
-
-  const intervalMinTL = T(//prevent too busy
-    (self: timeline) => {// VSCode events buggy
-      const f = () => (self.now = true);
-      setInterval(f, minDelayLimit);
-    }
-  );
-
-
-  const lineTL = T();
 
   interface dirname {
     dir: string;
@@ -95,10 +84,17 @@ const observeEmit = (target: target) => {
           };
     };
 
+
+  interface editorTL {
+    type: string;
+    now: vscode.TextEditor | undefined
+    sync: Function;
+  }
+
   //   if undefined, not triggered 
   //remove undefined of this event automatically
-  const currentActiveEditorTL = T(
-    (self: timeline) => {
+  const currentActiveEditorTL: editorTL = T(
+    (self: editorTL) => {
       self.now = vscode.window.activeTextEditor;
       vscode.window.onDidChangeActiveTextEditor(
         (editor) => (self.now = editor))
@@ -132,57 +128,45 @@ const observeEmit = (target: target) => {
     (dirname: dirname) => popTL.now = "AsciiDoc-Live-Electron: " + dirname.name
   );
 
-  const changeSelectionTL = T(
-    (self: dirnameTL) => {
 
-      (vscode.window
-        .onDidChangeTextEditorSelection(
-          (info) => {
-            //there is VS Code bug of event
-            /*  popTL.now = "" +(count++)+"  "+ JSON.stringify(info
-                .textEditor.document.uri.fsPath);*/
+  const currentLineTL = T(//prevent too busy
+    (self: timeline) => {// VSCode events buggy
+      self.now = undefined;
 
-            const dirname =
-              getDirNameObj(info.textEditor);
-            //popTL.now = "" + dirname.name;
-            dirname.dir === ""
-              ? undefined
-              : (() => {
-                const line = info.selections[0]
-                  .active.line;
+      const f = () => {
+        const line =
+          currentActiveEditorTL.now === undefined
+            ? self.now
+            : currentActiveEditorTL.now
+              .selection.active.line;
 
-                const lineSame =
-                  (line === lineTL.now);
-
-                popTL.now = "" + line;
-
-                lineTL.now = line;
-
-                const dirNameSame = ((
-                  dirname.dir === preAdocTL.now.dir)
-                  && (dirname.name === preAdocTL.now.name));
-
-                preAdocTL.now = cloneObj(dirname);
-
-                dirNameSame && !lineSame
-                  ? self.now = preAdocTL.now
-                  : undefined;
-
-              })()
-
-          })
-      )
+        (self.now === line)
+          ? undefined
+          : self.now = line
+      };
+      setInterval(f, minDelayLimit);
     }
   );
 
+  const currentLineAdocTL = currentLineTL
+    .sync((line: number) =>
+      currentAdocTL.now === undefined
+        ? undefined //no trigger
+        : line
+    );
+
+  /*
+currentLineAdocTL
+  .sync((line: number) =>
+    popTL.now = "Line = " + line);
+*/
 
   const changeTextTL = T(
     (self: timeline) =>
       (vscode.workspace
         .onDidChangeTextDocument(
           (info: vscode.TextDocumentChangeEvent) => {
-            getDirNameObj(vscode.window.activeTextEditor)
-              .dir === ""
+            currentActiveEditorTL.now === undefined
               ? undefined
               : self.now = true;
           })
@@ -194,7 +178,7 @@ const observeEmit = (target: target) => {
       currentAdocTL
         .sync(() => self.now = true);
 
-      changeSelectionTL
+      currentLineAdocTL
         .sync(() => self.now = true);
 
       changeTextTL
@@ -217,14 +201,13 @@ const observeEmit = (target: target) => {
 
   const textThenSocketTL = allThenResetTL
     ([textTL,
-      renderReadyTL,
-      intervalMinTL],
+      renderReadyTL]
     )
     .sync(
       () => (socketTL.now = {
         text: textTL.now,
-        dir_name: changeSelectionTL.now,
-        line: lineTL.now
+        dir_name: currentAdocTL.now,
+        line: currentLineAdocTL.now
       })
     );
 
