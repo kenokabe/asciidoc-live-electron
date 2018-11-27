@@ -33,6 +33,7 @@ const popTL = ((popup: Function) => T(
 const JsonSocket = require('json-socket-international');
 
 const maxDelayLimit = 1000;
+const minDelayLimit = 200;
 const observeEmit = (target: target) => {
 
   console.log("observeEmit");
@@ -40,10 +41,17 @@ const observeEmit = (target: target) => {
 
   const renderReadyTL = T();
 
-  const intervalTL = T(
+  const intervalMaxTL = T(//force render ready
     (self: timeline) => {
       const f = () => (renderReadyTL.now = true);
       setInterval(f, maxDelayLimit);
+    }
+  );
+
+  const intervalMinTL = T(//prevent too busy
+    (self: timeline) => {// VSCode events buggy
+      const f = () => (self.now = true);
+      setInterval(f, minDelayLimit);
     }
   );
 
@@ -130,9 +138,13 @@ const observeEmit = (target: target) => {
       (vscode.window
         .onDidChangeTextEditorSelection(
           (info) => {
+            //there is VS Code bug of event
+            /*  popTL.now = "" +(count++)+"  "+ JSON.stringify(info
+                .textEditor.document.uri.fsPath);*/
+
             const dirname =
               getDirNameObj(info.textEditor);
-
+            //popTL.now = "" + dirname.name;
             dirname.dir === ""
               ? undefined
               : (() => {
@@ -141,6 +153,9 @@ const observeEmit = (target: target) => {
 
                 const lineSame =
                   (line === lineTL.now);
+
+                popTL.now = "" + line;
+
                 lineTL.now = line;
 
                 const dirNameSame = ((
@@ -202,7 +217,9 @@ const observeEmit = (target: target) => {
 
   const textThenSocketTL = allThenResetTL
     ([textTL,
-      renderReadyTL])
+      renderReadyTL,
+      intervalMinTL],
+    )
     .sync(
       () => (socketTL.now = {
         text: textTL.now,
