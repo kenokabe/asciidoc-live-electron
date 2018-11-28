@@ -3,8 +3,8 @@
   "displayName": "AsciiDoc Live Electron",
   "description": "AsciiDoc Live Electron",
   "version": "0.0.1",
-  "publisher": "kenokabe",
-  "author": "Ken Okabe <kenokabe@gmail.com>",
+  "publisher": "stken2050",
+  "author": "Ken Okabe stken2050@gmail.com>",
   "license": "MIT",
   "engines": {
     "vscode": "^1.28.0"
