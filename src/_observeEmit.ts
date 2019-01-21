@@ -14,12 +14,12 @@ interface target {
   port: number;
 }
 const consoleTL = ((console) => T(
-  (self: timeline) => self.sync((a: unknown) => {
+  (self: timeline) => self.sync((a: any) => {
     console.log(a);
     return a;
   })
 ))(console);
-const log = (a: unknown) => (consoleTL.now = a);
+const log = (a: any) => (consoleTL.now = a);
 
 const popTL = ((popup: Function) => T(
   (self: timeline) => self
