@@ -1,6 +1,4 @@
-# asciidoc-live-electron README
-
-This is the README for your extension "asciidoc-live-electron". After writing up a brief description, we recommend including the following sections.
+# asciidoc-live-electron
 
 ## Features
 
@@ -63,3 +61,4 @@ Added features X, Y, and Z.
 * [Markdown Syntax Reference](https://help.github.com/articles/markdown-basics/)
 
 **Enjoy!**
+
